@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mt-monitor",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-04-08",
+  "triggers": {
+    "crons": [
+      "5 1 * * *"
+    ]
+  },
+  // Replace this placeholder before deploy.
+  "kv_namespaces": [
+    {
+      "binding": "MT_MONITOR_KV",
+      "id": "0123456789abcdef0123456789abcdef"
+    }
+  ]
+}

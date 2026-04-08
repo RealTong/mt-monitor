@@ -1,0 +1,10 @@
+MTEAM_AUTHORIZATION=replace-with-your-mteam-authorization
+MTEAM_API_KEY=replace-with-your-mteam-api-key
+TELEGRAM_BOT_TOKEN=replace-with-your-telegram-bot-token
+TELEGRAM_CHAT_ID=replace-with-your-telegram-chat-id
+
+# Optional: set this if you do not want the Worker to decode uid from the JWT.
+# MTEAM_UID=384024
+
+# Optional: current default is https://test2.m-team.cc/api
+# MTEAM_API_BASE_URL=https://test2.m-team.cc/api
