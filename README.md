@@ -106,7 +106,14 @@ Cloudflare cron expressions are UTC, so this runs at 09:05 in Asia/Shanghai ever
 
 The code defaults to `https://test2.m-team.cc/api`.
 
-Reason: when I checked on April 8, 2026, `https://api.m-team.cc/api` redirected unexpectedly, while `https://test2.m-team.cc/api` still responded as an API origin. If M-Team changes this again later, set `MTEAM_API_BASE_URL` to the new base URL.
+Why:
+
+- on April 8, 2026, `https://api.m-team.cc/api/` returned `HTTP 302` and redirected to `https://www.google.com/api/`
+- on the same date, `https://test2.m-team.cc/api/` returned `HTTP 200` with a JSON authentication error, which is the expected shape for a live API origin
+- the public `mteam` SDK package README uses `MTEAM_BASE_URL=http://test2.m-team.cc/api`
+- the same package ships an OpenAPI file whose server URL is `http://test2.m-team.cc/api`
+
+I still made the base URL configurable through `MTEAM_API_BASE_URL`, because M-Team appears to move API entrypoints over time.
 
 ## Verification
 
