@@ -1,6 +1,10 @@
 import type { TrafficTotals } from './types'
 
-export const DEFAULT_MTEAM_API_BASE_URL = 'https://test2.m-team.cc/api'
+export const DEFAULT_MTEAM_API_BASE_URL_CANDIDATES = [
+  'https://api.m-team.cc',
+  'https://api.m-team.io',
+  'https://test2.m-team.cc/api',
+] as const
 
 interface MTeamConfig {
   apiBaseUrl?: string
@@ -94,34 +98,58 @@ export function extractTrafficTotals(payload: unknown): TrafficTotals {
 }
 
 export async function fetchMTeamTraffic(
-  { apiBaseUrl = DEFAULT_MTEAM_API_BASE_URL, apiKey, authorization, uid }: MTeamConfig,
+  { apiBaseUrl, apiKey, authorization, uid }: MTeamConfig,
   fetchImpl: typeof fetch = fetch
 ): Promise<TrafficTotals> {
   const resolvedUid = uid ?? extractUidFromAuthorization(authorization)
-  const url = new URL('member/profile', apiBaseUrl.endsWith('/') ? apiBaseUrl : `${apiBaseUrl}/`)
+  const candidates = apiBaseUrl ? [apiBaseUrl] : [...DEFAULT_MTEAM_API_BASE_URL_CANDIDATES]
+  const errors: string[] = []
 
-  url.searchParams.set('uid', String(resolvedUid))
+  for (const candidate of candidates) {
+    const url = new URL('member/profile', candidate.endsWith('/') ? candidate : `${candidate}/`)
+    url.searchParams.set('uid', String(resolvedUid))
 
-  const response = await fetchImpl(url, {
-    method: 'POST',
-    headers: {
-      Authorization: authorization,
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-    },
-  })
+    const response = await fetchImpl(url, {
+      method: 'POST',
+      redirect: 'manual',
+      headers: {
+        Authorization: authorization,
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+      },
+    })
 
-  if (!response.ok) {
-    throw new Error(`M-Team request failed with HTTP ${response.status}`)
+    if (response.status >= 300 && response.status < 400) {
+      errors.push(`${candidate}: redirected`)
+      continue
+    }
+
+    const contentType = response.headers.get('content-type') ?? ''
+    const isJson = contentType.includes('application/json')
+
+    if (!isJson) {
+      if (apiBaseUrl) {
+        throw new Error(`M-Team endpoint returned non-JSON content from ${candidate}`)
+      }
+
+      errors.push(`${candidate}: non-JSON response`)
+      continue
+    }
+
+    const payload = await response.json()
+    const code = typeof payload?.code === 'string' ? Number(payload.code) : payload?.code
+    const message = typeof payload?.message === 'string' ? payload.message : 'Unknown error'
+
+    if (!response.ok) {
+      throw new Error(`M-Team request failed with HTTP ${response.status}: ${message}`)
+    }
+
+    if (!(code === 0 || message.toUpperCase() === 'SUCCESS')) {
+      throw new Error(`M-Team API error: ${message}`)
+    }
+
+    return extractTrafficTotals(payload)
   }
 
-  const payload = await response.json()
-  const code = typeof payload?.code === 'string' ? Number(payload.code) : payload?.code
-  const message = typeof payload?.message === 'string' ? payload.message : 'Unknown error'
-
-  if (!(code === 0 || message.toUpperCase() === 'SUCCESS')) {
-    throw new Error(`M-Team API error: ${message}`)
-  }
-
-  return extractTrafficTotals(payload)
+  throw new Error(`Unable to find a working M-Team API endpoint (${errors.join('; ')})`)
 }

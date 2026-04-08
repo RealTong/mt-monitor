@@ -104,16 +104,23 @@ Cloudflare cron expressions are UTC, so this runs at 09:05 in Asia/Shanghai ever
 
 ## M-Team API base URL
 
-The code defaults to `https://test2.m-team.cc/api`.
+If you set `MTEAM_API_BASE_URL`, the Worker will use that exact value.
 
-Why:
+If you do not set it, the Worker currently tries these endpoints in order:
 
-- on April 8, 2026, `https://api.m-team.cc/api/` returned `HTTP 302` and redirected to `https://www.google.com/api/`
+- `https://api.m-team.cc`
+- `https://api.m-team.io`
+- `https://test2.m-team.cc/api`
+
+Why this fallback exists:
+
+- a public Prowlarr issue from June 18, 2024 says M-Team announced a move from `domain/api` to `api.domain`, specifically `api.m-team.cc` and `api.m-team.io`
+- but on April 8, 2026, from this environment, both `https://api.m-team.cc/` and `https://api.m-team.io/` returned `HTTP 302` redirects to Google instead of JSON API responses
 - on the same date, `https://test2.m-team.cc/api/` returned `HTTP 200` with a JSON authentication error, which is the expected shape for a live API origin
 - the public `mteam` SDK package README uses `MTEAM_BASE_URL=http://test2.m-team.cc/api`
 - the same package ships an OpenAPI file whose server URL is `http://test2.m-team.cc/api`
 
-I still made the base URL configurable through `MTEAM_API_BASE_URL`, because M-Team appears to move API entrypoints over time.
+So the code now prefers the 2024-announced `api.` hosts first, but automatically falls back to the currently working legacy-style endpoint when those hosts do not behave like an API.
 
 ## Verification
 
