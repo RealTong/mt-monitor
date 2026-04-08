@@ -3,5 +3,8 @@ MTEAM_UID=replace-with-your-mteam-uid
 TELEGRAM_BOT_TOKEN=replace-with-your-telegram-bot-token
 TELEGRAM_CHAT_ID=replace-with-your-telegram-chat-id
 
+# Optional: protect GET /run with a shared secret
+# MANUAL_RUN_TOKEN=replace-with-a-random-token
+
 # Optional: current default is https://api.m-team.cc
 # MTEAM_API_BASE_URL=https://api.m-team.cc

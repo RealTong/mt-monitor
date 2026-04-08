@@ -1,11 +1,28 @@
 import type { TrafficTotals } from './types'
 
 export const DEFAULT_MTEAM_API_BASE_URL = 'https://api.m-team.cc'
+export const DEFAULT_MTEAM_API_BASE_URLS = [
+  DEFAULT_MTEAM_API_BASE_URL,
+  'https://api.m-team.io',
+  'https://test2.m-team.cc',
+]
 
 interface MTeamConfig {
   apiBaseUrl?: string
   apiKey: string
   uid: string
+}
+
+function buildProfileUrl(apiBaseUrl: string, uid: string): URL {
+  const normalizedBaseUrl = apiBaseUrl.trim().replace(/\/+$/, '')
+  const apiBase = normalizedBaseUrl.endsWith('/api')
+    ? normalizedBaseUrl
+    : `${normalizedBaseUrl}/api`
+  const url = new URL(`${apiBase}/member/profile`)
+
+  url.searchParams.set('uid', uid)
+
+  return url
 }
 
 function readNumber(value: unknown): number | null {
@@ -66,22 +83,29 @@ export function extractTrafficTotals(payload: unknown): TrafficTotals {
   }
 }
 
-export async function fetchMTeamTraffic(
-  { apiBaseUrl = DEFAULT_MTEAM_API_BASE_URL, apiKey, uid }: MTeamConfig,
-  fetchImpl: typeof fetch = fetch
+async function fetchMTeamTrafficFromUrl(
+  url: URL,
+  apiKey: string,
+  fetchImpl: typeof fetch
 ): Promise<TrafficTotals> {
-  const url = new URL('/api/member/profile', apiBaseUrl.endsWith('/') ? apiBaseUrl : `${apiBaseUrl}/`)
-  url.searchParams.set('uid', uid)
-
   const response = await fetchImpl(url, {
     method: 'POST',
     headers: {
       'x-api-key': apiKey,
     },
+    redirect: 'manual',
   })
 
   if (!response.ok) {
-    throw new Error(`M-Team request failed with HTTP ${response.status}`)
+    const redirectLocation = response.headers.get('location')
+    const responseText = (await response.text()).trim()
+    const details = [redirectLocation ? `location=${redirectLocation}` : '', responseText.slice(0, 200)]
+      .filter(Boolean)
+      .join(' | ')
+
+    throw new Error(
+      `M-Team request failed with HTTP ${response.status}${details ? `: ${details}` : ''}`
+    )
   }
 
   const payload = await response.json()
@@ -93,4 +117,31 @@ export async function fetchMTeamTraffic(
   }
 
   return extractTrafficTotals(payload)
+}
+
+export async function fetchMTeamTraffic(
+  { apiBaseUrl, apiKey, uid }: MTeamConfig,
+  fetchImpl: typeof fetch = fetch
+): Promise<TrafficTotals> {
+  const candidates = apiBaseUrl
+    ? [apiBaseUrl, ...DEFAULT_MTEAM_API_BASE_URLS.filter((candidate) => candidate !== apiBaseUrl)]
+    : DEFAULT_MTEAM_API_BASE_URLS
+  const errors: string[] = []
+
+  for (const candidate of candidates) {
+    const url = buildProfileUrl(candidate, uid)
+
+    try {
+      return await fetchMTeamTrafficFromUrl(url, apiKey, fetchImpl)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      errors.push(`${url.toString()} -> ${message}`)
+    }
+  }
+
+  throw new Error(
+    errors.length === 1
+      ? errors[0]
+      : `M-Team request failed across all endpoints: ${errors.join(' ; ')}`
+  )
 }

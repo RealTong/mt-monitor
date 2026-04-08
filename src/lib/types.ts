@@ -9,6 +9,7 @@ export interface Bindings {
   MTEAM_UID: string
   TELEGRAM_BOT_TOKEN: string
   TELEGRAM_CHAT_ID: string
+  MANUAL_RUN_TOKEN?: string
   MTEAM_API_BASE_URL?: string
 }
 

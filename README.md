@@ -70,7 +70,8 @@ npx wrangler secret put TELEGRAM_CHAT_ID
 
 Optional values:
 
-- `MTEAM_API_BASE_URL`: override the default API host if M-Team changes it
+- `MTEAM_API_BASE_URL`: preferred API host to try first
+- `MANUAL_RUN_TOKEN`: shared secret for `GET /run`
 
 For local development, copy [.dev.vars.example](/Users/realtong/Developer/mt-monitor/.dev.vars.example) to `.dev.vars` and fill in your own values. `.dev.vars` is ignored by git.
 
@@ -84,6 +85,29 @@ Health checks:
 
 - `GET /`
 - `GET /healthz`
+- `GET /run`
+
+`GET /run` triggers the same workflow as the daily cron job.
+
+Recommended protection:
+
+```bash
+npx wrangler secret put MANUAL_RUN_TOKEN
+```
+
+Then trigger it with either:
+
+```bash
+curl "https://<your-worker-domain>/run?token=<your-token>"
+```
+
+or:
+
+```bash
+curl -H "x-run-token: <your-token>" "https://<your-worker-domain>/run"
+```
+
+If `MANUAL_RUN_TOKEN` is not configured, `GET /run` is publicly accessible.
 
 ### 5. Deploy
 
@@ -103,11 +127,12 @@ Cloudflare cron expressions are UTC, so this runs at 09:05 in Asia/Shanghai ever
 
 ## M-Team API base URL
 
-If you set `MTEAM_API_BASE_URL`, the Worker will use that exact value.
+The Worker tries these hosts in order:
 
-If you do not set it, the Worker defaults to:
-
+- your configured `MTEAM_API_BASE_URL`, if present
 - `https://api.m-team.cc`
+- `https://api.m-team.io`
+- `https://test2.m-team.cc`
 
 The request path is:
 
