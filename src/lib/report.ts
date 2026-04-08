@@ -64,7 +64,7 @@ export async function runDailyReport(
     {
       apiBaseUrl: config.mteamApiBaseUrl,
       apiKey: config.mteamApiKey,
-      authorization: config.mteamAuthorization,
+      uid: config.mteamUid,
     },
     fetchImpl
   )

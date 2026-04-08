@@ -1,8 +1,8 @@
 import type { Bindings } from './types'
 
 export interface MonitorConfig {
-  mteamAuthorization: string
   mteamApiKey: string
+  mteamUid: string
   telegramBotToken: string
   telegramChatId: string
   mteamApiBaseUrl?: string
@@ -20,8 +20,8 @@ function getRequiredString(env: Bindings, key: keyof Bindings): string {
 
 export function readMonitorConfig(env: Bindings): MonitorConfig {
   return {
-    mteamAuthorization: getRequiredString(env, 'MTEAM_AUTHORIZATION'),
     mteamApiKey: getRequiredString(env, 'MTEAM_API_KEY'),
+    mteamUid: getRequiredString(env, 'MTEAM_UID'),
     telegramBotToken: getRequiredString(env, 'TELEGRAM_BOT_TOKEN'),
     telegramChatId: getRequiredString(env, 'TELEGRAM_CHAT_ID'),
     mteamApiBaseUrl: env.MTEAM_API_BASE_URL?.trim() || undefined,

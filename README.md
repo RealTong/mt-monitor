@@ -62,8 +62,8 @@ Copy the returned namespace ID into [wrangler.jsonc](/Users/realtong/Developer/m
 Use Wrangler secrets for all sensitive values:
 
 ```bash
-npx wrangler secret put MTEAM_AUTHORIZATION
 npx wrangler secret put MTEAM_API_KEY
+npx wrangler secret put MTEAM_UID
 npx wrangler secret put TELEGRAM_BOT_TOKEN
 npx wrangler secret put TELEGRAM_CHAT_ID
 ```
@@ -115,8 +115,11 @@ The request path is:
 
 Authentication is sent through:
 
-- `Authorization: <your token>`
 - `x-api-key: <your api key>`
+
+The request also includes:
+
+- `uid=<your uid>` as a query parameter
 
 The Worker reads `data.memberCount.uploaded` and `data.memberCount.downloaded` from the response.
 

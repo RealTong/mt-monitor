@@ -5,7 +5,7 @@ export const DEFAULT_MTEAM_API_BASE_URL = 'https://api.m-team.cc'
 interface MTeamConfig {
   apiBaseUrl?: string
   apiKey: string
-  authorization: string
+  uid: string
 }
 
 function readNumber(value: unknown): number | null {
@@ -67,16 +67,15 @@ export function extractTrafficTotals(payload: unknown): TrafficTotals {
 }
 
 export async function fetchMTeamTraffic(
-  { apiBaseUrl = DEFAULT_MTEAM_API_BASE_URL, apiKey, authorization }: MTeamConfig,
+  { apiBaseUrl = DEFAULT_MTEAM_API_BASE_URL, apiKey, uid }: MTeamConfig,
   fetchImpl: typeof fetch = fetch
 ): Promise<TrafficTotals> {
   const url = new URL('/api/member/profile', apiBaseUrl.endsWith('/') ? apiBaseUrl : `${apiBaseUrl}/`)
+  url.searchParams.set('uid', uid)
 
   const response = await fetchImpl(url, {
     method: 'POST',
     headers: {
-      Authorization: authorization,
-      'Content-Type': 'application/json',
       'x-api-key': apiKey,
     },
   })

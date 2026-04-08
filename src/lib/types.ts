@@ -5,8 +5,8 @@ export interface KVNamespaceLike {
 
 export interface Bindings {
   MT_MONITOR_KV: KVNamespaceLike
-  MTEAM_AUTHORIZATION: string
   MTEAM_API_KEY: string
+  MTEAM_UID: string
   TELEGRAM_BOT_TOKEN: string
   TELEGRAM_CHAT_ID: string
   MTEAM_API_BASE_URL?: string

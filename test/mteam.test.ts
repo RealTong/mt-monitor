@@ -1,12 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import {
-  extractTrafficTotals,
-  fetchMTeamTraffic,
-} from '../src/lib/mteam'
-
-const AUTH_TOKEN = 'test-authorization'
+import { extractTrafficTotals, fetchMTeamTraffic } from '../src/lib/mteam'
 
 test('extractTrafficTotals reads memberCount totals', () => {
   assert.deepEqual(
@@ -68,12 +63,11 @@ test('fetchMTeamTraffic requests the official profile endpoint', async () => {
     {
       apiBaseUrl: 'https://api.m-team.cc',
       apiKey: 'test-api-key',
-      authorization: AUTH_TOKEN,
+      uid: '384024',
     },
     fetchImpl
   )
 
-  assert.equal(requestedUrl, 'https://api.m-team.cc/api/member/profile')
-  assert.equal(requestHeaders?.get('authorization'), AUTH_TOKEN)
+  assert.equal(requestedUrl, 'https://api.m-team.cc/api/member/profile?uid=384024')
   assert.equal(requestHeaders?.get('x-api-key'), 'test-api-key')
 })
