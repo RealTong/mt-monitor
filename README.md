@@ -70,7 +70,6 @@ npx wrangler secret put TELEGRAM_CHAT_ID
 
 Optional values:
 
-- `MTEAM_UID`: only needed if you do not want the Worker to decode the `uid` from the JWT payload
 - `MTEAM_API_BASE_URL`: override the default API host if M-Team changes it
 
 For local development, copy [.dev.vars.example](/Users/realtong/Developer/mt-monitor/.dev.vars.example) to `.dev.vars` and fill in your own values. `.dev.vars` is ignored by git.
@@ -106,21 +105,20 @@ Cloudflare cron expressions are UTC, so this runs at 09:05 in Asia/Shanghai ever
 
 If you set `MTEAM_API_BASE_URL`, the Worker will use that exact value.
 
-If you do not set it, the Worker currently tries these endpoints in order:
+If you do not set it, the Worker defaults to:
 
 - `https://api.m-team.cc`
-- `https://api.m-team.io`
-- `https://test2.m-team.cc/api`
 
-Why this fallback exists:
+The request path is:
 
-- a public Prowlarr issue from June 18, 2024 says M-Team announced a move from `domain/api` to `api.domain`, specifically `api.m-team.cc` and `api.m-team.io`
-- but on April 8, 2026, from this environment, both `https://api.m-team.cc/` and `https://api.m-team.io/` returned `HTTP 302` redirects to Google instead of JSON API responses
-- on the same date, `https://test2.m-team.cc/api/` returned `HTTP 200` with a JSON authentication error, which is the expected shape for a live API origin
-- the public `mteam` SDK package README uses `MTEAM_BASE_URL=http://test2.m-team.cc/api`
-- the same package ships an OpenAPI file whose server URL is `http://test2.m-team.cc/api`
+- `POST /api/member/profile`
 
-So the code now prefers the 2024-announced `api.` hosts first, but automatically falls back to the currently working legacy-style endpoint when those hosts do not behave like an API.
+Authentication is sent through:
+
+- `Authorization: <your token>`
+- `x-api-key: <your api key>`
+
+The Worker reads `data.memberCount.uploaded` and `data.memberCount.downloaded` from the response.
 
 ## Verification
 

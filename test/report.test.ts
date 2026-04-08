@@ -17,15 +17,9 @@ class FakeKV implements KVNamespaceLike {
 }
 
 function createEnv(kv: FakeKV): Bindings {
-  const authorization = [
-    Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url'),
-    Buffer.from(JSON.stringify({ uid: 384024, sub: 'example-user' })).toString('base64url'),
-    'signature',
-  ].join('.')
-
   return {
     MT_MONITOR_KV: kv,
-    MTEAM_AUTHORIZATION: authorization,
+    MTEAM_AUTHORIZATION: 'test-authorization',
     MTEAM_API_KEY: 'test-api-key',
     TELEGRAM_BOT_TOKEN: 'test-bot-token',
     TELEGRAM_CHAT_ID: 'test-chat-id',
@@ -67,7 +61,7 @@ test('runDailyReport sends a baseline report on first run', async () => {
   })
 
   assert.equal(requests.length, 2)
-  assert.match(requests[0].url, /member\/profile\?uid=384024/)
+  assert.equal(requests[0].url, 'https://api.m-team.cc/api/member/profile')
   assert.match(requests[1].url, /api\.telegram\.org/)
 
   const telegramBody = JSON.parse(String(requests[1].init?.body))
