@@ -72,6 +72,7 @@ test('fetchMTeamTraffic requests the official profile endpoint', async () => {
 
   assert.equal(requestedUrl, 'https://api.m-team.cc/api/member/profile?uid=384024')
   assert.equal(requestHeaders?.get('x-api-key'), 'test-api-key')
+  assert.match(requestHeaders?.get('user-agent') ?? '', /Mozilla\/5\.0/)
   assert.equal(requestRedirect, 'manual')
 })
 

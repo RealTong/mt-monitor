@@ -6,6 +6,7 @@ export const DEFAULT_MTEAM_API_BASE_URLS = [
   'https://api.m-team.io',
   'https://test2.m-team.cc',
 ]
+export const MTEAM_USER_AGENT = 'Mozilla/5.0'
 
 interface MTeamConfig {
   apiBaseUrl?: string
@@ -91,6 +92,7 @@ async function fetchMTeamTrafficFromUrl(
   const response = await fetchImpl(url, {
     method: 'POST',
     headers: {
+      'user-agent': MTEAM_USER_AGENT,
       'x-api-key': apiKey,
     },
     redirect: 'manual',
