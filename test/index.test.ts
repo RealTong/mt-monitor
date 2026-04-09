@@ -53,6 +53,7 @@ test('GET /run triggers a report when no manual token is configured', async () =
           memberCount: {
             uploaded: 10 * 1024 ** 4,
             downloaded: 4 * 1024 ** 4,
+            shareRate: '40.500',
           },
         },
       })
@@ -137,6 +138,7 @@ test('GET /run accepts the manual token in the query string', async () => {
           memberCount: {
             uploaded: 11 * 1024 ** 4,
             downloaded: 5 * 1024 ** 4,
+            shareRate: '41.250',
           },
         },
       })

@@ -66,6 +66,7 @@ export function extractTrafficTotals(payload: unknown): TrafficTotals {
     'data.downloaded',
     'data.download',
   ]
+  const shareRatePaths = ['data.memberCount.shareRate', 'data.shareRate']
 
   const uploaded = uploadedPaths
     .map((path) => readPath(payload, path))
@@ -73,14 +74,18 @@ export function extractTrafficTotals(payload: unknown): TrafficTotals {
   const downloaded = downloadedPaths
     .map((path) => readPath(payload, path))
     .find((value) => value !== null)
+  const shareRate = shareRatePaths
+    .map((path) => readPath(payload, path))
+    .find((value) => value !== null)
 
-  if (uploaded === undefined || downloaded === undefined) {
-    throw new Error('Unable to locate uploaded/downloaded totals in M-Team response')
+  if (uploaded === undefined || downloaded === undefined || shareRate === undefined) {
+    throw new Error('Unable to locate uploaded/downloaded totals or share rate in M-Team response')
   }
 
   return {
     uploaded,
     downloaded,
+    shareRate,
   }
 }
 

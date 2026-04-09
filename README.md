@@ -1,35 +1,37 @@
 # mt-monitor
 
-A lightweight Cloudflare Worker that checks your M-Team traffic once per day, stores the latest snapshot in Cloudflare KV, and sends a formatted Telegram report with the daily upload/download deltas.
+A lightweight Cloudflare Worker that checks your M-Team traffic every 4 hours, stores the latest snapshot in Cloudflare KV, and sends a formatted Telegram report with upload/download deltas since the previous report.
 
 ## What the report includes
 
 - current uploaded total
 - current downloaded total
-- upload delta vs. yesterday
-- download delta vs. yesterday
+- current share rate
+- upload delta vs. previous report
+- download delta vs. previous report
 
 ## Example report
 
 ```html
-<b>M-Team Daily Report</b>
+<b>M-Team Traffic Report</b>
 <pre>2026-04-08 01:05:00 UTC</pre>
 
 <b>Totals</b>
 Upload    <code>5.02 TiB</code>
 Download  <code>2.00 TiB</code>
+Share Rate  <code>41.926x</code>
 
-<b>Today vs Yesterday</b>
+<b>Since Last Report</b>
 Upload    <code>+20.00 GiB</code>
 Download  <code>+3.00 GiB</code>
 ```
 
 ## How it works
 
-1. A Cloudflare Cron Trigger runs the Worker once per day.
+1. A Cloudflare Cron Trigger runs the Worker every 4 hours.
 2. The Worker calls the M-Team profile API.
 3. The latest uploaded/downloaded totals are compared with the previous KV snapshot.
-4. A Telegram message is sent.
+4. The current share rate is included in the Telegram message.
 5. The new snapshot replaces the old one in KV.
 
 Only the latest snapshot is stored, so the project stays simple and cheap.
@@ -87,7 +89,7 @@ Health checks:
 - `GET /healthz`
 - `GET /run`
 
-`GET /run` triggers the same workflow as the daily cron job.
+`GET /run` triggers the same workflow as the scheduled cron job.
 
 Recommended protection:
 
@@ -120,10 +122,10 @@ npm run deploy
 [wrangler.jsonc](/Users/realtong/Developer/mt-monitor/wrangler.jsonc) ships with:
 
 ```txt
-5 1 * * *
+5 */4 * * *
 ```
 
-Cloudflare cron expressions are UTC, so this runs at 09:05 in Asia/Shanghai every day.
+Cloudflare cron expressions are UTC, so this runs at 00:05, 04:05, 08:05, 12:05, 16:05, and 20:05 in Asia/Shanghai.
 
 ## M-Team API base URL
 
@@ -146,7 +148,7 @@ The request also includes:
 
 - `uid=<your uid>` as a query parameter
 
-The Worker reads `data.memberCount.uploaded` and `data.memberCount.downloaded` from the response.
+The Worker reads `data.memberCount.uploaded`, `data.memberCount.downloaded`, and `data.memberCount.shareRate` from the response.
 
 ## Verification
 

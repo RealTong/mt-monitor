@@ -43,6 +43,7 @@ test('runDailyReport sends a baseline report on first run', async () => {
           memberCount: {
             uploaded: 5 * 1024 ** 4,
             downloaded: 2 * 1024 ** 4,
+            shareRate: '41.926',
           },
         },
       })
@@ -67,10 +68,12 @@ test('runDailyReport sends a baseline report on first run', async () => {
   const telegramBody = JSON.parse(String(requests[1].init?.body))
   assert.equal(telegramBody.chat_id, 'test-chat-id')
   assert.match(telegramBody.text, /Baseline saved/)
+  assert.match(telegramBody.text, /41\.926x/)
 
   const snapshot = JSON.parse((await kv.get(SNAPSHOT_KEY)) as string)
   assert.equal(snapshot.uploaded, 5 * 1024 ** 4)
   assert.equal(snapshot.downloaded, 2 * 1024 ** 4)
+  assert.equal(snapshot.shareRate, 41.926)
 })
 
 test('runDailyReport sends deltas when a previous snapshot exists', async () => {
@@ -83,6 +86,7 @@ test('runDailyReport sends deltas when a previous snapshot exists', async () => 
       recordedAt: '2026-04-07T01:05:00.000Z',
       uploaded: 5 * 1024 ** 4,
       downloaded: 2 * 1024 ** 4,
+      shareRate: 40.5,
     })
   )
 
@@ -100,6 +104,7 @@ test('runDailyReport sends deltas when a previous snapshot exists', async () => 
           memberCount: {
             uploaded: 5 * 1024 ** 4 + 20 * 1024 ** 3,
             downloaded: 2 * 1024 ** 4 + 3 * 1024 ** 3,
+            shareRate: '42.137',
           },
         },
       })
@@ -118,10 +123,13 @@ test('runDailyReport sends deltas when a previous snapshot exists', async () => 
   })
 
   const telegramBody = JSON.parse(String(requests[1].init?.body))
+  assert.match(telegramBody.text, /Since Last Report/)
+  assert.match(telegramBody.text, /42\.137x/)
   assert.match(telegramBody.text, /\+20\.00 GiB/)
   assert.match(telegramBody.text, /\+3\.00 GiB/)
 
   const snapshot = JSON.parse((await kv.get(SNAPSHOT_KEY)) as string)
   assert.equal(snapshot.uploaded, 5 * 1024 ** 4 + 20 * 1024 ** 3)
   assert.equal(snapshot.downloaded, 2 * 1024 ** 4 + 3 * 1024 ** 3)
+  assert.equal(snapshot.shareRate, 42.137)
 })

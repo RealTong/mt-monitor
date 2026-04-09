@@ -29,6 +29,10 @@ export function formatDelta(bytes: number): string {
   return `${sign}${formatBytes(Math.abs(bytes))}`
 }
 
+export function formatShareRate(shareRate: number): string {
+  return `${shareRate.toFixed(3)}x`
+}
+
 function formatRecordedAt(recordedAt: string): string {
   const date = new Date(recordedAt)
   return date.toISOString().replace('T', ' ').replace('.000Z', ' UTC')
@@ -39,18 +43,19 @@ export function buildTelegramMessage({
   previousSnapshot,
 }: TelegramMessageInput): string {
   const lines = [
-    '<b>M-Team Daily Report</b>',
+    '<b>M-Team Traffic Report</b>',
     `<pre>${formatRecordedAt(snapshot.recordedAt)}</pre>`,
     '',
     '<b>Totals</b>',
     `Upload    <code>${formatBytes(snapshot.uploaded)}</code>`,
     `Download  <code>${formatBytes(snapshot.downloaded)}</code>`,
+    `Share Rate  <code>${formatShareRate(snapshot.shareRate)}</code>`,
     '',
-    '<b>Today vs Yesterday</b>',
+    '<b>Since Last Report</b>',
   ]
 
   if (!previousSnapshot) {
-    lines.push('Baseline saved. Tomorrow the report will include deltas.')
+    lines.push('Baseline saved. Next report will include deltas.')
     return lines.join('\n')
   }
 

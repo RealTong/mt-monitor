@@ -73,6 +73,7 @@ export async function runDailyReport(
     recordedAt: now.toISOString(),
     uploaded: totals.uploaded,
     downloaded: totals.downloaded,
+    shareRate: totals.shareRate,
   }
 
   const message = buildTelegramMessage({

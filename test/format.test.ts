@@ -20,31 +20,37 @@ test('buildTelegramMessage renders a first-run baseline message', () => {
       recordedAt: '2026-04-08T01:05:00.000Z',
       uploaded: 5 * 1024 ** 4,
       downloaded: 2 * 1024 ** 4,
+      shareRate: 41.926,
     },
     previousSnapshot: null,
   })
 
-  assert.match(message, /M-Team Daily Report/)
+  assert.match(message, /M-Team Traffic Report/)
   assert.match(message, /Baseline saved/)
+  assert.match(message, /41\.926x/)
   assert.match(message, /5\.00 TiB/)
   assert.match(message, /2\.00 TiB/)
 })
 
-test('buildTelegramMessage renders day-over-day deltas', () => {
+test('buildTelegramMessage renders deltas since the previous report', () => {
   const message = buildTelegramMessage({
     snapshot: {
       recordedAt: '2026-04-08T01:05:00.000Z',
       uploaded: 5 * 1024 ** 4 + 20 * 1024 ** 3,
       downloaded: 2 * 1024 ** 4 + 3 * 1024 ** 3,
+      shareRate: 42.137,
     },
     previousSnapshot: {
       recordedAt: '2026-04-07T01:05:00.000Z',
       uploaded: 5 * 1024 ** 4,
       downloaded: 2 * 1024 ** 4,
+      shareRate: 40.5,
     },
   })
 
-  assert.match(message, /Today vs Yesterday/)
+  assert.match(message, /Share Rate/)
+  assert.match(message, /42\.137x/)
+  assert.match(message, /Since Last Report/)
   assert.match(message, /\+20\.00 GiB/)
   assert.match(message, /\+3\.00 GiB/)
 })

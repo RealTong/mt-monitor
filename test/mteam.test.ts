@@ -3,7 +3,7 @@ import test from 'node:test'
 
 import { extractTrafficTotals, fetchMTeamTraffic } from '../src/lib/mteam'
 
-test('extractTrafficTotals reads memberCount totals', () => {
+test('extractTrafficTotals reads memberCount totals and share rate', () => {
   assert.deepEqual(
     extractTrafficTotals({
       code: 0,
@@ -12,17 +12,19 @@ test('extractTrafficTotals reads memberCount totals', () => {
         memberCount: {
           uploaded: '1099511627776',
           downloaded: 549755813888,
+          shareRate: '41.926',
         },
       },
     }),
     {
       uploaded: 1099511627776,
       downloaded: 549755813888,
+      shareRate: 41.926,
     }
   )
 })
 
-test('extractTrafficTotals falls back to direct totals', () => {
+test('extractTrafficTotals falls back to direct totals and share rate', () => {
   assert.deepEqual(
     extractTrafficTotals({
       code: 0,
@@ -30,11 +32,13 @@ test('extractTrafficTotals falls back to direct totals', () => {
       data: {
         uploaded: 123,
         downloaded: '456',
+        shareRate: '1.234',
       },
     }),
     {
       uploaded: 123,
       downloaded: 456,
+      shareRate: 1.234,
     }
   )
 })
@@ -56,6 +60,7 @@ test('fetchMTeamTraffic requests the official profile endpoint', async () => {
         memberCount: {
           uploaded: 1,
           downloaded: 2,
+          shareRate: 3.456,
         },
       },
     })
@@ -104,6 +109,7 @@ test('fetchMTeamTraffic falls back to alternate endpoints when the first host re
           memberCount: {
             uploaded: 3,
             downloaded: 4,
+            shareRate: 5.678,
           },
         },
       })
@@ -113,6 +119,7 @@ test('fetchMTeamTraffic falls back to alternate endpoints when the first host re
   assert.deepEqual(totals, {
     uploaded: 3,
     downloaded: 4,
+    shareRate: 5.678,
   })
   assert.deepEqual(requestedUrls, [
     'https://api.m-team.cc/api/member/profile?uid=384024',
@@ -149,6 +156,7 @@ test('fetchMTeamTraffic still falls back when a preferred base URL is provided',
           memberCount: {
             uploaded: 6,
             downloaded: 7,
+            shareRate: 8.901,
           },
         },
       })
@@ -158,6 +166,7 @@ test('fetchMTeamTraffic still falls back when a preferred base URL is provided',
   assert.deepEqual(totals, {
     uploaded: 6,
     downloaded: 7,
+    shareRate: 8.901,
   })
   assert.deepEqual(requestedUrls, [
     'https://api.m-team.cc/api/member/profile?uid=384024',

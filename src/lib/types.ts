@@ -16,6 +16,7 @@ export interface Bindings {
 export interface TrafficTotals {
   uploaded: number
   downloaded: number
+  shareRate: number
 }
 
 export interface TrafficSnapshot extends TrafficTotals {

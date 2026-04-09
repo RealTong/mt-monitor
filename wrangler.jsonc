@@ -5,7 +5,7 @@
   "compatibility_date": "2026-04-08",
   "triggers": {
     "crons": [
-      "5 1 * * *"
+      "5 */4 * * *"
     ]
   },
   // Replace this placeholder before deploy.
