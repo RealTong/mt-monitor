@@ -1,6 +1,6 @@
 # mt-monitor
 
-A lightweight Cloudflare Worker that checks your M-Team traffic every 4 hours, stores the latest snapshot in Cloudflare KV, and sends a formatted Telegram report with upload/download deltas since the previous report.
+A lightweight Cloudflare Worker that checks your M-Team traffic every 4 hours, stores every snapshot in Cloudflare KV, and sends a formatted Telegram report plus a 7-day delta chart to Telegram.
 
 ## What the report includes
 
@@ -9,6 +9,7 @@ A lightweight Cloudflare Worker that checks your M-Team traffic every 4 hours, s
 - current share rate
 - upload delta vs. previous report
 - download delta vs. previous report
+- a 7-day chart of daily upload/download deltas
 
 ## Example report
 
@@ -32,15 +33,17 @@ Download  <code>+3.00 GiB</code>
 2. The Worker calls the M-Team profile API.
 3. The latest uploaded/downloaded totals are compared with the previous KV snapshot.
 4. The current share rate is included in the Telegram message.
-5. The new snapshot replaces the old one in KV.
+5. Every snapshot is appended to KV history.
+6. A QuickChart image is generated for the latest 7 daily deltas and sent to Telegram as a photo.
 
-Only the latest snapshot is stored, so the project stays simple and cheap.
+This keeps the Worker lightweight because the chart is rendered by QuickChart, not inside the Worker runtime.
 
 ## Project structure
 
 - [src/index.ts](/Users/realtong/Developer/mt-monitor/src/index.ts): Worker entrypoint, HTTP health endpoints, scheduled handler
+- [src/lib/chart.ts](/Users/realtong/Developer/mt-monitor/src/lib/chart.ts): 7-day delta aggregation and QuickChart URL builder
 - [src/lib/mteam.ts](/Users/realtong/Developer/mt-monitor/src/lib/mteam.ts): M-Team request and response parsing
-- [src/lib/report.ts](/Users/realtong/Developer/mt-monitor/src/lib/report.ts): daily workflow, KV snapshot handling, Telegram send
+- [src/lib/report.ts](/Users/realtong/Developer/mt-monitor/src/lib/report.ts): report workflow, KV history handling, Telegram send
 - [src/lib/format.ts](/Users/realtong/Developer/mt-monitor/src/lib/format.ts): byte and message formatting
 
 ## Setup
@@ -149,6 +152,12 @@ The request also includes:
 - `uid=<your uid>` as a query parameter
 
 The Worker reads `data.memberCount.uploaded`, `data.memberCount.downloaded`, and `data.memberCount.shareRate` from the response.
+
+## Chart rendering
+
+The chart image is rendered by [QuickChart](https://quickchart.io/documentation/), then sent with Telegram `sendPhoto`.
+
+The Worker does not generate PNG files locally, which keeps bundle size and runtime overhead low for Cloudflare Workers.
 
 ## Verification
 

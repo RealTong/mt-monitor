@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { SNAPSHOT_KEY, runDailyReport } from '../src/lib/report'
+import { HISTORY_KEY, SNAPSHOT_KEY, runDailyReport } from '../src/lib/report'
 import type { Bindings, KVNamespaceLike } from '../src/lib/types'
 
 class FakeKV implements KVNamespaceLike {
@@ -89,6 +89,29 @@ test('runDailyReport sends deltas when a previous snapshot exists', async () => 
       shareRate: 40.5,
     })
   )
+  await kv.put(
+    HISTORY_KEY,
+    JSON.stringify([
+      {
+        recordedAt: '2026-04-05T20:00:00.000Z',
+        uploaded: 5 * 1024 ** 4 - 40 * 1024 ** 3,
+        downloaded: 2 * 1024 ** 4 - 6 * 1024 ** 3,
+        shareRate: 39.9,
+      },
+      {
+        recordedAt: '2026-04-06T20:00:00.000Z',
+        uploaded: 5 * 1024 ** 4 - 24 * 1024 ** 3,
+        downloaded: 2 * 1024 ** 4 - 5 * 1024 ** 3,
+        shareRate: 40.1,
+      },
+      {
+        recordedAt: '2026-04-07T20:00:00.000Z',
+        uploaded: 5 * 1024 ** 4,
+        downloaded: 2 * 1024 ** 4,
+        shareRate: 40.5,
+      },
+    ])
+  )
 
   const requests: Array<{ url: string; init?: RequestInit }> = []
 
@@ -110,6 +133,10 @@ test('runDailyReport sends deltas when a previous snapshot exists', async () => 
       })
     }
 
+    if (url.includes('/sendPhoto')) {
+      return Response.json({ ok: true, result: { message_id: 1 } })
+    }
+
     if (url.includes('/sendMessage')) {
       return Response.json({ ok: true, result: { message_id: 2 } })
     }
@@ -122,7 +149,14 @@ test('runDailyReport sends deltas when a previous snapshot exists', async () => 
     now: new Date('2026-04-08T01:05:00.000Z'),
   })
 
-  const telegramBody = JSON.parse(String(requests[1].init?.body))
+  assert.equal(requests.length, 3)
+
+  const photoBody = JSON.parse(String(requests[1].init?.body))
+  assert.match(requests[1].url, /sendPhoto/)
+  assert.match(photoBody.caption, /7-Day Daily Delta Chart/)
+  assert.match(photoBody.photo, /quickchart\.io/)
+
+  const telegramBody = JSON.parse(String(requests[2].init?.body))
   assert.match(telegramBody.text, /Since Last Report/)
   assert.match(telegramBody.text, /42\.137x/)
   assert.match(telegramBody.text, /\+20\.00 GiB/)
@@ -132,4 +166,7 @@ test('runDailyReport sends deltas when a previous snapshot exists', async () => 
   assert.equal(snapshot.uploaded, 5 * 1024 ** 4 + 20 * 1024 ** 3)
   assert.equal(snapshot.downloaded, 2 * 1024 ** 4 + 3 * 1024 ** 3)
   assert.equal(snapshot.shareRate, 42.137)
+
+  const history = JSON.parse((await kv.get(HISTORY_KEY)) as string)
+  assert.equal(history.length, 4)
 })
