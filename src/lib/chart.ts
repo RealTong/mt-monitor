@@ -2,7 +2,7 @@ import type { TrafficSnapshot } from './types'
 
 const GIB = 1024 ** 3
 
-export interface DailyDeltaPoint {
+export interface IntervalDeltaPoint {
   date: string
   uploadDeltaGiB: number
   downloadDeltaGiB: number
@@ -12,41 +12,49 @@ function roundToTwo(value: number): number {
   return Math.round(value * 100) / 100
 }
 
-function formatDayLabel(recordedAt: string): string {
-  return new Date(recordedAt).toISOString().slice(5, 10)
+function getBucketStart(recordedAt: string): number {
+  const date = new Date(recordedAt)
+  const bucketHour = date.getUTCHours() - (date.getUTCHours() % 4)
+
+  date.setUTCMinutes(0, 0, 0)
+  date.setUTCHours(bucketHour)
+
+  return date.getTime()
 }
 
-export function buildDailyDeltaSeries(history: TrafficSnapshot[]): DailyDeltaPoint[] {
+function formatBucketLabel(bucketStart: number): string {
+  return new Date(bucketStart).toISOString().slice(5, 13).replace('T', ' ')
+}
+
+export function buildIntervalDeltaSeries(history: TrafficSnapshot[]): IntervalDeltaPoint[] {
   const sorted = [...history].sort(
     (left, right) => new Date(left.recordedAt).getTime() - new Date(right.recordedAt).getTime()
   )
-  const latestByDay = new Map<string, TrafficSnapshot>()
+  const latestByBucket = new Map<number, TrafficSnapshot>()
 
   for (const snapshot of sorted) {
-    latestByDay.set(formatDayLabel(snapshot.recordedAt), snapshot)
+    latestByBucket.set(getBucketStart(snapshot.recordedAt), snapshot)
   }
 
-  const dailySnapshots = [...latestByDay.entries()]
-    .sort(([left], [right]) => left.localeCompare(right))
-    .map(([, snapshot]) => snapshot)
+  const bucketSnapshots = [...latestByBucket.entries()].sort(([left], [right]) => left - right)
 
-  const deltas: DailyDeltaPoint[] = []
+  const deltas: IntervalDeltaPoint[] = []
 
-  for (let index = 1; index < dailySnapshots.length; index += 1) {
-    const previous = dailySnapshots[index - 1]
-    const current = dailySnapshots[index]
+  for (let index = 1; index < bucketSnapshots.length; index += 1) {
+    const [, previous] = bucketSnapshots[index - 1]
+    const [currentBucketStart, current] = bucketSnapshots[index]
 
     deltas.push({
-      date: formatDayLabel(current.recordedAt),
+      date: formatBucketLabel(currentBucketStart),
       uploadDeltaGiB: roundToTwo((current.uploaded - previous.uploaded) / GIB),
       downloadDeltaGiB: roundToTwo((current.downloaded - previous.downloaded) / GIB),
     })
   }
 
-  return deltas.slice(-7)
+  return deltas.slice(-42)
 }
 
-export function buildQuickChartUrl(points: DailyDeltaPoint[]): URL {
+export function buildQuickChartUrl(points: IntervalDeltaPoint[]): URL {
   const chart = {
     data: {
       datasets: [
@@ -61,7 +69,7 @@ export function buildQuickChartUrl(points: DailyDeltaPoint[]): URL {
           pointBorderColor: '#ffffff',
           pointBorderWidth: 2,
           pointHoverRadius: 5,
-          pointRadius: 4,
+          pointRadius: 2,
           tension: 0.35,
         },
         {
@@ -75,7 +83,7 @@ export function buildQuickChartUrl(points: DailyDeltaPoint[]): URL {
           pointBorderColor: '#ffffff',
           pointBorderWidth: 2,
           pointHoverRadius: 5,
-          pointRadius: 4,
+          pointRadius: 2,
           tension: 0.35,
         },
       ],
@@ -107,12 +115,12 @@ export function buildQuickChartUrl(points: DailyDeltaPoint[]): URL {
           padding: {
             bottom: 18,
           },
-          text: 'Daily upload and download changes in GiB',
+          text: '4-hour upload and download changes in GiB',
         },
         title: {
           color: '#111827',
           display: true,
-          text: 'M-Team 7-Day Delta Trend',
+          text: 'M-Team 7-Day 4-Hour Delta Trend',
         },
       },
       scales: {
@@ -122,6 +130,8 @@ export function buildQuickChartUrl(points: DailyDeltaPoint[]): URL {
           },
           ticks: {
             color: '#6b7280',
+            maxRotation: 0,
+            maxTicksLimit: 8,
           },
         },
         y: {

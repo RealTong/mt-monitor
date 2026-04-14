@@ -1,4 +1,4 @@
-import { buildDailyDeltaSeries, buildQuickChartUrl } from './chart'
+import { buildIntervalDeltaSeries, buildQuickChartUrl } from './chart'
 import { buildTelegramMessage } from './format'
 import { readMonitorConfig } from './env'
 import { fetchMTeamTraffic } from './mteam'
@@ -82,7 +82,7 @@ async function sendTelegramPhoto(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      caption: '<b>7-Day Daily Delta Chart</b>\n<code>Upload / Download in GiB</code>',
+      caption: '<b>7-Day 4-Hour Delta Chart</b>\n<code>Upload / Download in GiB</code>',
       chat_id: chatId,
       parse_mode: 'HTML',
       photo: photoUrl,
@@ -129,13 +129,13 @@ export async function runDailyReport(
     previousSnapshot,
   })
   const nextHistory = [...history, snapshot]
-  const dailyDeltaSeries = buildDailyDeltaSeries(nextHistory)
+  const intervalDeltaSeries = buildIntervalDeltaSeries(nextHistory)
 
-  if (dailyDeltaSeries.length > 0) {
+  if (intervalDeltaSeries.length > 0) {
     await sendTelegramPhoto(
       config.telegramBotToken,
       config.telegramChatId,
-      buildQuickChartUrl(dailyDeltaSeries).toString(),
+      buildQuickChartUrl(intervalDeltaSeries).toString(),
       fetchImpl
     )
   }

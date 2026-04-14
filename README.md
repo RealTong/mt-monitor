@@ -1,6 +1,6 @@
 # mt-monitor
 
-A lightweight Cloudflare Worker that checks your M-Team traffic every 4 hours, stores every snapshot in Cloudflare KV, and sends a formatted Telegram report plus a 7-day delta chart to Telegram.
+A lightweight Cloudflare Worker that checks your M-Team traffic every 4 hours, stores every snapshot in Cloudflare KV, and sends a formatted Telegram report plus a 7-day 4-hour delta chart to Telegram.
 
 ## What the report includes
 
@@ -9,7 +9,7 @@ A lightweight Cloudflare Worker that checks your M-Team traffic every 4 hours, s
 - current share rate
 - upload delta vs. previous report
 - download delta vs. previous report
-- a 7-day chart of daily upload/download deltas
+- a 7-day chart of 4-hour upload/download deltas
 
 ## Example report
 
@@ -34,14 +34,14 @@ Download  <code>+3.00 GiB</code>
 3. The latest uploaded/downloaded totals are compared with the previous KV snapshot.
 4. The current share rate is included in the Telegram message.
 5. Every snapshot is appended to KV history.
-6. A QuickChart image is generated for the latest 7 daily deltas and sent to Telegram as a photo.
+6. A QuickChart image is generated for the latest 7 days of 4-hour deltas and sent to Telegram as a photo.
 
 This keeps the Worker lightweight because the chart is rendered by QuickChart, not inside the Worker runtime.
 
 ## Project structure
 
 - [src/index.ts](/Users/realtong/Developer/mt-monitor/src/index.ts): Worker entrypoint, HTTP health endpoints, scheduled handler
-- [src/lib/chart.ts](/Users/realtong/Developer/mt-monitor/src/lib/chart.ts): 7-day delta aggregation and QuickChart URL builder
+- [src/lib/chart.ts](/Users/realtong/Developer/mt-monitor/src/lib/chart.ts): 7-day 4-hour delta aggregation and QuickChart URL builder
 - [src/lib/mteam.ts](/Users/realtong/Developer/mt-monitor/src/lib/mteam.ts): M-Team request and response parsing
 - [src/lib/report.ts](/Users/realtong/Developer/mt-monitor/src/lib/report.ts): report workflow, KV history handling, Telegram send
 - [src/lib/format.ts](/Users/realtong/Developer/mt-monitor/src/lib/format.ts): byte and message formatting

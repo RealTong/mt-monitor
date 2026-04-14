@@ -153,7 +153,7 @@ test('runDailyReport sends deltas when a previous snapshot exists', async () => 
 
   const photoBody = JSON.parse(String(requests[1].init?.body))
   assert.match(requests[1].url, /sendPhoto/)
-  assert.match(photoBody.caption, /7-Day Daily Delta Chart/)
+  assert.match(photoBody.caption, /7-Day 4-Hour Delta Chart/)
   assert.match(photoBody.photo, /quickchart\.io/)
 
   const telegramBody = JSON.parse(String(requests[2].init?.body))
